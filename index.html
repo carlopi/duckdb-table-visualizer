@@ -11,6 +11,7 @@ It's showcases how duckdb-wasm can efficiently query on the fly remote resources
          content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
          />
       <script src="https://cdn.jsdelivr.net/npm/regular-table"></script>
+<link rel="stylesheet" href="https://duckdb.org/css/main.css">
       <link
          rel="stylesheet"
          href="https://cdn.jsdelivr.net/npm/regular-table/dist/css/material.css"
@@ -107,7 +108,7 @@ It's showcases how duckdb-wasm can efficiently query on the fly remote resources
       </div>
       <br>
       <br>
-      <p id="last_query"></p>
+      <code id="last_query" style="white-space: pre;"></code><p id="last_query_status"></p>
       <div style="height:100%; position:relative;">
          <regular-table></regular-table>
       </div>
@@ -154,17 +155,26 @@ It's showcases how duckdb-wasm can efficiently query on the fly remote resources
          }
          var must_detach = false;
          
-         
-         async function executeQuery(conn, sql) {
-         document.getElementById("last_query").innerHTML = "EXECUTING: " + sql;
+	var setup_queries = "";
+
+         async function executeQuery(conn, sql, append = false) {
+	if (append) {
+		setup_queries += sql;
+		setup_queries += "\n";
+	}
+         document.getElementById("last_query").innerHTML = setup_queries + sql;
+         document.getElementById("last_query_status").innerHTML = "Executing...";
          var error = null;
+	const startTime = performance.now();
          var res = await conn.query(sql).catch((e) => {error = e; console.log(e);});
+	const endTime = performance.now();
          var is_valid = true;
          if (error !== null) {
-         document.getElementById("last_query").innerHTML = "ERROR: " + error;
+         document.getElementById("last_query").innerHTML = error;
+         document.getElementById("last_query_status").innerHTML = "Error!";
          is_valid = false;
          } else {
-         document.getElementById("last_query").innerHTML = "COMPLETED: " + sql;
+         document.getElementById("last_query_status").innerHTML = "Completed in " + Math.floor(endTime - startTime) + "ms";
          is_valid = true;
          }
          return {result:res, is_valid:is_valid};
@@ -175,7 +185,6 @@ It's showcases how duckdb-wasm can efficiently query on the fly remote resources
            conn.close();
            db.flushFiles();
            db.dropFiles();
-         
            conn = await db.connect();
          
          var resource_path = document.getElementById('resource_path').value;
@@ -183,7 +192,8 @@ It's showcases how duckdb-wasm can efficiently query on the fly remote resources
          var target_table_name = document.getElementById('table_name').value;
          var target_schema_name = document.getElementById('schema_name').value;
          var timetravel_string = document.getElementById('timetravel_string').value;
-         
+        
+ 
          var last_res = null;
          last_res = await executeQuery(conn, "BEGIN TRANSACTION;");
          if (!last_res.is_valid) {
@@ -191,11 +201,13 @@ It's showcases how duckdb-wasm can efficiently query on the fly remote resources
          return;
          }
          
+
          await executeQuery(conn, "DETACH __my_resource__;");
          var view_query = "CREATE OR REPLACE VIEW __my_view__ AS FROM ";
          
+         setup_queries = "";
          if (resource_type !== "") {
-         last_res = await executeQuery(conn, "ATTACH IF NOT EXISTS '" + resource_path + "' AS __my_resource__ (TYPE "+ resource_type + ");");
+         last_res = await executeQuery(conn, "ATTACH IF NOT EXISTS '" + resource_path + "' AS __my_resource__ (TYPE "+ resource_type + ");", true);
          if (!last_res.is_valid) {
          table.clear();
          return;
@@ -208,19 +220,21 @@ It's showcases how duckdb-wasm can efficiently query on the fly remote resources
          view_query += "." + target_schema_name;
          }
          view_query += "." + target_table_name;
-         }
-         
          if (timetravel_string) {
          view_query += " AT (TIMESTAMP => (" + timetravel_string + ")::TIMESTAMP)";
          }
          } else {
+		view_query = "CREATE OR REPLACE VIEW __my_view__ AS FROM duckdb_tables() WHERE database_name = '__my_resource__'";
+	}
+         } else {
          view_query += "'" + resource_path + "'";
          }
+         
          
          view_query += ";"
          
          
-         last_res = await executeQuery(conn, view_query);
+         last_res = await executeQuery(conn, view_query, true);
          if (!last_res.is_valid) {
          table.clear();
          return;
@@ -253,7 +267,7 @@ It's showcases how duckdb-wasm can efficiently query on the fly remote resources
          
 	var my_values = null;
 	if (y0 < y1) {
-         last_res = (await executeQuery(conn, "SELECT COLUMNS(*)::VARCHAR FROM __my_view__ OFFSET " + (y0) + " LIMIT " + (y1 - y0) + ";"))
+         last_res = (await executeQuery(conn, "FROM __my_view__ OFFSET " + (y0) + " LIMIT " + (y1 - y0) + ";"))
          var my_values = last_res.result.toArray();
          }
          const columns =new Array(x1 - x0);	
