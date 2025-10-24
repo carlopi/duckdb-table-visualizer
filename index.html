@@ -27,12 +27,12 @@ It's showcases how duckdb-wasm can efficiently query on the fly remote resources
          <form style="width: 70%;" id="attach_form">
             <h3>Attach options</h3>
             <label for="path">Resource path:</label><br>
-            <input type="text" id="resource_path" name="path" value="https://blobs.duckdb.org/train_services.parquet" style="width: -webkit-fill-available"><br>
+            <input type="text" id="resource_path" name="path" value="https://blobs.duckdb.org/datalake/tpch-sf3.ducklake" style="width: -webkit-fill-available"><br>
             <div style="width: -webkit-fill-available;">
                <div style="width:100%; display: flex;">
                   <div style="width: 32%; ">
                      <label for="schema">type</label>
-                     <input type="text" id="resource_type" name="schema" value="" style="width: -webkit-fill-available">
+                     <input type="text" id="resource_type" name="schema" value="ducklake" style="width: -webkit-fill-available">
                   </div>
                   <div style="width: 2%; "></div>
                   <div style="width: 32%; ">
@@ -92,7 +92,7 @@ It's showcases how duckdb-wasm can efficiently query on the fly remote resources
                   <div style="width: 2%; "></div>
                   <div style="width: 32%; ">
                      <label for="table">table</label>
-                     <input type="text" id="table_name" name="table" value="" style="width: -webkit-fill-available">
+                     <input type="text" id="table_name" name="table" value="lineitem" style="width: -webkit-fill-available">
                   </div>
                   <div style="width: 2%; "></div>
                   <div style="width: 32%; ">
