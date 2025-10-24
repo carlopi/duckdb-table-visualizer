@@ -253,10 +253,11 @@
                    const data = [];
                    const column_headers = [];
          
-         
+	var my_values = null;
+	if (y0 < y1) {
          last_res = (await executeQuery(conn, "SELECT COLUMNS(*)::VARCHAR FROM __my_view__ OFFSET " + (y0) + " LIMIT " + (y1 - y0) + ";"))
          var my_values = last_res.result.toArray();
-         
+         }
          const columns =new Array(x1 - x0);	
            for (let i = x0; i < x1 ; i++) {
          columns[i - x0] = new Array();
