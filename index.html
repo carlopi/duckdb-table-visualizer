@@ -1,0 +1,313 @@
+<!--
+   Copyright (c) 2020, the Regular Table Authors.
+   
+   This file is part of the Regular Table library, distributed under the terms of
+   the Apache License 2.0.  The full license can be found in the LICENSE file.
+   
+   -->
+<!doctype html>
+<html>
+   <head>
+      <meta
+         name="viewport"
+         content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+         />
+      <script src="https://cdn.jsdelivr.net/npm/regular-table"></script>
+      <link
+         rel="stylesheet"
+         href="https://cdn.jsdelivr.net/npm/regular-table/dist/css/material.css"
+         />
+      <style>
+         td {
+         color: #1078d1;
+         }
+      </style>
+   </head>
+   <body style="position:fixed; bottom:0;right:0;left:0;top:0;">
+      <div style="width:100%; display: flex;">
+         <form style="width: 70%;" id="attach_form">
+            <h3>Attach options</h3>
+            <label for="path">Resource path:</label><br>
+            <input type="text" id="resource_path" name="path" value="https://raw.githubusercontent.com/marhar/frozen/main/space.ducklake" style="width: -webkit-fill-available"><br>
+            <div style="width: -webkit-fill-available;">
+               <div style="width:100%; display: flex;">
+                  <div style="width: 32%; ">
+                     <label for="schema">type</label>
+                     <input type="text" id="resource_type" name="schema" value="ducklake" style="width: -webkit-fill-available">
+                  </div>
+                  <div style="width: 2%; "></div>
+                  <div style="width: 32%; ">
+                     <label for="table">option #1</label>
+                     <input type="text" id="table" name="table" value="" style="width: -webkit-fill-available">
+                  </div>
+                  <div style="width: 2%; "></div>
+                  <div style="width: 32%; ">
+                     <label for="table">option #2</label>
+                     <input type="text" id="table" name="table" value="" style="width: -webkit-fill-available">
+                  </div>
+               </div>
+            </div>
+         </form>
+         <div style="width:28%; position:relative;">
+            <!--        <regular-table></regular-table> -->
+         </div>
+      </div>
+      <br>
+      <input type="checkbox" id="expend" style="display:none"/>
+      <div style="width:100%; display: flex;">
+         <form style="width: 70%;" id="credentials_form">
+            <h3>  <label for="expend">Credentials [optional]</label></h3>
+            <div style="width: -webkit-fill-available;">
+               <div style="width:100%; display: flex;">
+                  <div style="width: 32%; ">
+                     <label for="schema">type</label>
+                     <input type="text" id="schema" name="schema" value="" style="width: -webkit-fill-available">
+                  </div>
+                  <div style="width: 2%; "></div>
+                  <div style="width: 32%; ">
+                     <label for="table">option #1</label>
+                     <input type="text" id="table" name="table" value="" style="width: -webkit-fill-available">
+                  </div>
+                  <div style="width: 2%; "></div>
+                  <div style="width: 32%; ">
+                     <label for="table">option #2</label>
+                     <input type="text" id="table" name="table" value="" style="width: -webkit-fill-available">
+                  </div>
+               </div>
+            </div>
+         </form>
+         <div style="width:28%; position:relative;">
+            <!--        <regular-table></regular-table> -->
+         </div>
+      </div>
+      <br>
+      <div style="width:100%; display: flex;">
+         <form style="width: 70%;" id="table_form">
+            <h3>Table selection [depends on attach type, possibly hidden]</h3>
+            <div style="width: -webkit-fill-available;">
+               <div style="width:100%; display: flex;">
+                  <div style="width: 32%; ">
+                     <label for="schema">schema</label>
+                     <input type="text" id="schema_name" name="schema" value="main" style="width: -webkit-fill-available">
+                  </div>
+                  <div style="width: 2%; "></div>
+                  <div style="width: 32%; ">
+                     <label for="table">table</label>
+                     <input type="text" id="table_name" name="table" value="astronauts" style="width: -webkit-fill-available">
+                  </div>
+                  <div style="width: 2%; "></div>
+                  <div style="width: 32%; ">
+                     <label for="table">at clause [optional]</label>
+                     <input type="text" id="timetravel_string" name="table" value="now()" style="width: -webkit-fill-available">
+                  </div>
+               </div>
+            </div>
+         </form>
+         <div style="width:28%; position:relative;">
+            <!--        <regular-table></regular-table> -->
+         </div>
+      </div>
+      <br>
+      <br>
+      <p id="last_query"></p>
+      <div style="height:100%; position:relative;">
+         <regular-table></regular-table>
+      </div>
+      <script>
+         const getDb = async () => {
+           const duckdb = window.duckdbduckdbWasm;
+           // @ts-ignore
+           if (window._db) return window._db;
+           const JSDELIVR_BUNDLES = duckdb.getJsDelivrBundles();
+         
+           // Select a bundle based on browser checks
+           const bundle = await duckdb.selectBundle(JSDELIVR_BUNDLES);
+         
+           const worker_url = URL.createObjectURL(
+             new Blob([`importScripts("${bundle.mainWorker}");`], {
+               type: "text/javascript",
+             })
+           );
+         
+           // Instantiate the asynchronous version of DuckDB-wasm
+           const worker = new Worker(worker_url);
+           // const logger = null //new duckdb.ConsoleLogger();
+           const logger = new duckdb.ConsoleLogger();
+           const db = new duckdb.AsyncDuckDB(logger, worker);
+           await db.instantiate(bundle.mainModule, bundle.pthreadWorker);
+           URL.revokeObjectURL(worker_url);
+           window._db = db;
+           return db;
+         };
+      </script>
+      <script type="module">
+         import * as duckdbduckdbWasm from "https://cdn.jsdelivr.net/npm/@duckdb/duckdb-wasm@1.31.1-dev1.0/+esm";
+         window.duckdbduckdbWasm = duckdbduckdbWasm;
+         getDb().then(async (db) => {
+           // Create a new connection
+         
+         
+           var conn = await db.connect();
+         {
+         
+         
+         await conn.query("LOAD httpfs;");
+         await conn.query("LOAD icu;");
+         }
+         var must_detach = false;
+         
+         
+         async function executeQuery(conn, sql) {
+         document.getElementById("last_query").innerHTML = "EXECUTING: " + sql;
+         var error = null;
+         var res = await conn.query(sql).catch((e) => {error = e; console.log(e);});
+         var is_valid = true;
+         if (error !== null) {
+         document.getElementById("last_query").innerHTML = "ERROR: " + error;
+         is_valid = false;
+         } else {
+         document.getElementById("last_query").innerHTML = "COMPLETED: " + sql;
+         is_valid = true;
+         }
+         return {result:res, is_valid:is_valid};
+         }
+               const table = document.getElementsByTagName("regular-table")[0];
+         
+         async function refresh() {
+           conn.close();
+           db.flushFiles();
+           db.dropFiles();
+         
+           conn = await db.connect();
+         
+         var resource_path = document.getElementById('resource_path').value;
+         var resource_type = document.getElementById('resource_type').value;
+         var target_table_name = document.getElementById('table_name').value;
+         var target_schema_name = document.getElementById('schema_name').value;
+         var timetravel_string = document.getElementById('timetravel_string').value;
+         
+         var last_res = null;
+         last_res = await executeQuery(conn, "BEGIN TRANSACTION;");
+         if (!last_res.is_valid) {
+         table.clear();
+         return;
+         }
+         
+         await executeQuery(conn, "DETACH __my_resource__;");
+         var view_query = "CREATE OR REPLACE VIEW __my_view__ AS FROM ";
+         
+         if (resource_type !== "") {
+         last_res = await executeQuery(conn, "ATTACH IF NOT EXISTS '" + resource_path + "' AS __my_resource__ (TYPE "+ resource_type + ");");
+         if (!last_res.is_valid) {
+         table.clear();
+         return;
+         }
+         view_query += "__my_resource__";
+         
+         
+         if (target_table_name !== "") {
+         if (target_schema_name !== "") {
+         view_query += "." + target_schema_name;
+         }
+         view_query += "." + target_table_name;
+         }
+         
+         if (timetravel_string) {
+         view_query += " AT (TIMESTAMP => (" + timetravel_string + ")::TIMESTAMP)";
+         }
+         } else {
+         view_query += "'" + resource_path + "'";
+         }
+         
+         view_query += ";"
+         
+         
+         last_res = await executeQuery(conn, view_query);
+         if (!last_res.is_valid) {
+         table.clear();
+         return;
+         }
+         
+         last_res = (await executeQuery(conn, "SELECT count(*) as num_rows FROM __my_view__;"));
+         if (!last_res.is_valid) {
+         table.clear();
+         return;
+         }
+         var table_num_rows = last_res.result.toArray()[0].num_rows;
+         last_res = (await executeQuery(conn, "SELECT column_name FROM (DESCRIBE __my_view__);"));
+         if (!last_res.is_valid) {
+         table.clear();
+         return;
+         }
+         var table_num_columns = last_res.result;
+         
+         var numColumns = table_num_columns.numRows;
+         var column_names = [];
+         
+         for (var i = 0; i< numColumns; i++) column_names.push(table_num_columns.toArray()[i].column_name);
+         
+               const NUM_ROWS = Number(table_num_rows);
+               const NUM_COLUMNS = Number(table_num_columns.numRows);
+         
+               async function test_data_model(x0, y0, x1, y1) {
+                   const data = [];
+                   const column_headers = [];
+         
+         
+         last_res = (await executeQuery(conn, "SELECT COLUMNS(*)::VARCHAR FROM __my_view__ OFFSET " + (y0) + " LIMIT " + (y1 - y0) + ";"))
+         var my_values = last_res.result.toArray();
+         
+         const columns =new Array(x1 - x0);	
+           for (let i = x0; i < x1 ; i++) {
+         columns[i - x0] = new Array();
+                       data.push(columns[i-x0]);
+                       column_headers.push([
+                           column_names[i-x0],
+                       ]);
+         }
+         
+                       for (let j = y0; j < y1; j++) {
+         
+         var the_row = my_values[j - y0];
+                   	for (let i = x0; i < x1 ; i++) {
+         
+                           	 columns[i - x0].push([the_row[column_names[i]]]);
+                       }
+         }
+         
+                   const row_headers = [];
+                   for (let j = y0; j < y1; j++) {
+                       row_headers.push(["" + (j+1)]);
+                   }
+         
+                   return {
+                       num_rows: NUM_ROWS,
+                       num_columns: NUM_COLUMNS,
+                       row_headers,
+                       column_headers,
+                       data,
+                   };
+               }
+         
+               table.setDataListener(test_data_model);
+               table.draw();
+         
+         
+         
+         }
+         
+         async function form_submitted(event) {
+         console.log("FORM SUBMITTED", event);
+           event.preventDefault();
+         await refresh();
+         }
+         
+         document.getElementById('attach_form').addEventListener("change", form_submitted);
+         document.getElementById('credentials_form').addEventListener("change", form_submitted);
+         document.getElementById('table_form').addEventListener("change", form_submitted);
+         refresh();
+         
+         });
+      </script>
+   </body>
+</html>
