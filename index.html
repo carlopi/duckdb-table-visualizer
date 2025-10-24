@@ -10,17 +10,9 @@ It's showcases how duckdb-wasm can efficiently query on the fly remote resources
          name="viewport"
          content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
          />
-      <script src="https://cdn.jsdelivr.net/npm/regular-table"></script>
-<link rel="stylesheet" href="https://duckdb.org/css/main.css">
-      <link
-         rel="stylesheet"
-         href="https://cdn.jsdelivr.net/npm/regular-table/dist/css/material.css"
-         />
-      <style>
-         td {
-         color: #1078d1;
-         }
-      </style>
+      <script src="https://cdn.jsdelivr.net/npm/regular-table" defer></script>
+      <link rel="stylesheet" href="https://duckdb.org/css/main.css">
+      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/regular-table/dist/css/material.css"/>
    </head>
    <body style="position:fixed; bottom:0;right:0;left:0;top:0;">
       <div style="width:100%; display: flex;">
@@ -108,11 +100,12 @@ It's showcases how duckdb-wasm can efficiently query on the fly remote resources
       </div>
       <br>
       <br>
-      <code id="last_query" style="white-space: pre;"></code><p id="last_query_status"></p>
+      <code id="last_query" style="white-space: pre;"></code><p id="last_query_status">1/4: HTML loaded</p>
       <div style="height:100%; position:relative;">
          <regular-table></regular-table>
       </div>
       <script>
+         document.getElementById("last_query_status").innerHTML = "2/5: Instantiating DuckDB-Wasm - main thread component";
          const getDb = async () => {
            const duckdb = window.duckdbduckdbWasm;
            // @ts-ignore
@@ -133,7 +126,14 @@ It's showcases how duckdb-wasm can efficiently query on the fly remote resources
            // const logger = null //new duckdb.ConsoleLogger();
            const logger = new duckdb.ConsoleLogger();
            const db = new duckdb.AsyncDuckDB(logger, worker);
-           await db.instantiate(bundle.mainModule, bundle.pthreadWorker);
+	function progressHandler(progress) {
+		var percentage = 100 * progress.bytesLoaded / progress.bytesTotal / 6;
+		if (percentage > 100) percentage = 100;
+		percentage = Math.ceil(percentage);
+		console.log(progress.bytesLoaded, progress.bytesTotal);
+         document.getElementById("last_query_status").innerHTML = "4/5: Instantiating DuckDB-Wasm - Wasm module, " + percentage + "%";
+	}
+           await db.instantiate(bundle.mainModule, bundle.pthreadWorker, progressHandler);
            URL.revokeObjectURL(worker_url);
            window._db = db;
            return db;
@@ -141,27 +141,23 @@ It's showcases how duckdb-wasm can efficiently query on the fly remote resources
       </script>
       <script type="module">
          import * as duckdbduckdbWasm from "https://cdn.jsdelivr.net/npm/@duckdb/duckdb-wasm@1.31.1-dev1.0/+esm";
+         document.getElementById("last_query_status").innerHTML = "3/5: Instantiating DuckDB-Wasm - WebWorker component";
          window.duckdbduckdbWasm = duckdbduckdbWasm;
          getDb().then(async (db) => {
            // Create a new connection
          
+         document.getElementById("last_query_status").innerHTML = "5/5: DuckDB-Wasm ready";
          
+	var setup_queries = "";
            var conn = await db.connect();
          {
          
          
-         await conn.query("LOAD httpfs;");
-         await conn.query("LOAD icu;");
+         await executeQuery(conn, "LOAD httpfs;");
+         await executeQuery(conn, "LOAD icu;");
          }
-         var must_detach = false;
-         
-	var setup_queries = "";
 
          async function executeQuery(conn, sql, append = false) {
-	if (append) {
-		setup_queries += sql;
-		setup_queries += "\n";
-	}
          document.getElementById("last_query").innerHTML = setup_queries + sql;
          document.getElementById("last_query_status").innerHTML = "Executing...";
          var error = null;
@@ -174,10 +170,13 @@ It's showcases how duckdb-wasm can efficiently query on the fly remote resources
          document.getElementById("last_query_status").innerHTML = "Error!";
          is_valid = false;
          } else {
-         document.getElementById("last_query_status").innerHTML = "Completed in " + Math.floor(endTime - startTime) + "ms";
          document.getElementById("last_query_status").innerHTML = "Idle";
          is_valid = true;
          }
+	if (append) {
+		setup_queries += sql;
+		setup_queries += "\n";
+	}
          return {result:res, is_valid:is_valid};
          }
                const table = document.getElementsByTagName("regular-table")[0];
