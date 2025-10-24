@@ -175,6 +175,7 @@ It's showcases how duckdb-wasm can efficiently query on the fly remote resources
          is_valid = false;
          } else {
          document.getElementById("last_query_status").innerHTML = "Completed in " + Math.floor(endTime - startTime) + "ms";
+         document.getElementById("last_query_status").innerHTML = "Idle";
          is_valid = true;
          }
          return {result:res, is_valid:is_valid};
