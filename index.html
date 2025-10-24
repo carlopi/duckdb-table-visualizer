@@ -135,7 +135,6 @@ It's showcases how duckdb-wasm can efficiently query on the fly remote resources
 		var percentage = 100 * progress.bytesLoaded / progress.bytesTotal / 6;
 		if (percentage > 100) percentage = 100;
 		percentage = Math.ceil(percentage);
-		console.log(progress.bytesLoaded, progress.bytesTotal);
          document.getElementById("last_query_status").innerHTML = "4/5: Instantiating DuckDB-Wasm - Wasm module, " + percentage + "%";
 	}
            await db.instantiate(bundle.mainModule, bundle.pthreadWorker, progressHandler);
@@ -315,9 +314,8 @@ It's showcases how duckdb-wasm can efficiently query on the fly remote resources
          }
          
          async function form_submitted(event) {
-         console.log("FORM SUBMITTED", event);
            event.preventDefault();
-         await refresh();
+           await refresh();
          }
          
          document.getElementById('attach_form').addEventListener("change", form_submitted);
