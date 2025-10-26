@@ -312,9 +312,44 @@ It's showcases how duckdb-wasm can efficiently query on the fly remote resources
          
          
          }
-         
+
+	function store_hash_segment() {
+		var hash_segment = "";
+		function add_component(name) {
+			if (document.getElementById(name).value.length == 0) return;
+			if (hash_segment.length > 0) hash_segment += "&";
+			hash_segment += name + "=" + encodeURIComponent(document.getElementById(name).value);
+		}
+		add_component("resource_path");
+		add_component("resource_type");
+		add_component("schema_name");
+		add_component("table_name");
+		add_component("timetravel_string");
+		window.location.hash = hash_segment;
+	}
+	function extract_hash_segment(hash_segment) {
+		if (hash_segment.length == 0) return;
+		if (hash_segment[0] == '#') hash_segment = hash_segment.substring(1);
+
+		function add_component(name) {
+			document.getElementById(name).value = "";
+		}
+		add_component("resource_path");
+		add_component("resource_type");
+		add_component("schema_name");
+		add_component("table_name");
+		add_component("timetravel_string");
+		const parts = hash_segment.split("&");
+		for (const p in parts) {
+			const inner_parts = parts[p].split("=");
+			document.getElementById(inner_parts[0]).value = decodeURIComponent(inner_parts[1]);
+		}
+	}
+	extract_hash_segment(window.location.hash);
+ 
          async function form_submitted(event) {
            event.preventDefault();
+	   store_hash_segment();
            await refresh();
          }
          
