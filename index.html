@@ -20,6 +20,17 @@ It's showcases how duckdb-wasm can efficiently query on the fly remote resources
       </style>
    </head>
    <body style="position:fixed; bottom:0;right:0;left:0;top:0;">
+	<a href="#resource_path=https%3A%2F%2Fblobs.duckdb.org%2Ftrain_services.parquet"
+	 onclick="window.location.hash='#resource_path=https%3A%2F%2Fblobs.duckdb.org%2Ftrain_services.parquet';extract_hash_segment();var event=document.createEvent('HTMLEvents'); event.initEvent('change', true, true);event.eventName='change';document.getElementById('attach_form').dispatchEvent(event);"
+		>Parquet, train_services</a>
+---
+	<a href="#resource_path=https%3A%2F%2Fblobs.duckdb.org%2Fdatalake%2Ftpch-sf3.ducklake&resource_type=ducklake&table_name=lineitem"
+	 onclick="window.location.hash='#resource_path=https%3A%2F%2Fblobs.duckdb.org%2Fdatalake%2Ftpch-sf3.ducklake&resource_type=ducklake&table_name=lineitem';extract_hash_segment();var event=document.createEvent('HTMLEvents'); event.initEvent('change', true, true);event.eventName='change';document.getElementById('attach_form').dispatchEvent(event);"
+		>DuckLake, TPCH-sf3, lineitem</a>
+---
+	<a href="#resource_path=https%3A%2F%2Fblobs.duckdb.org%2Fdatalake%2Ftpch-sf3.ducklake&resource_type=duckdb"
+	 onclick="window.location.hash='#resource_path=https%3A%2F%2Fblobs.duckdb.org%2Fdatalake%2Ftpch-sf3.ducklake&resource_type=duckdb';extract_hash_segment();var event=document.createEvent('HTMLEvents'); event.initEvent('change', true, true);event.eventName='change';document.getElementById('attach_form').dispatchEvent(event);"
+		>DuckLake (as duckdb), tpch-sf3, [metadata]</a>
       <div style="width:100%; display: flex;">
          <form style="width: 70%;" id="attach_form">
             <h3>Attach options</h3>
@@ -110,6 +121,26 @@ It's showcases how duckdb-wasm can efficiently query on the fly remote resources
          <regular-table></regular-table>
       </div>
       <script>
+	function extract_hash_segment() {
+		var hash_segment = window.location.hash;
+		if (hash_segment.length == 0) return;
+		if (hash_segment[0] == '#') hash_segment = hash_segment.substring(1);
+
+		function add_component(name) {
+			document.getElementById(name).value = "";
+		}
+		add_component("resource_path");
+		add_component("resource_type");
+		add_component("schema_name");
+		add_component("table_name");
+		add_component("timetravel_string");
+		const parts = hash_segment.split("&");
+		for (const p in parts) {
+			const inner_parts = parts[p].split("=");
+			document.getElementById(inner_parts[0]).value = decodeURIComponent(inner_parts[1]);
+		}
+	}
+	extract_hash_segment();
          document.getElementById("last_query_status").innerHTML = "2/5: Instantiating DuckDB-Wasm - main thread component";
          const getDb = async () => {
            const duckdb = window.duckdbduckdbWasm;
@@ -327,25 +358,6 @@ It's showcases how duckdb-wasm can efficiently query on the fly remote resources
 		add_component("timetravel_string");
 		window.location.hash = hash_segment;
 	}
-	function extract_hash_segment(hash_segment) {
-		if (hash_segment.length == 0) return;
-		if (hash_segment[0] == '#') hash_segment = hash_segment.substring(1);
-
-		function add_component(name) {
-			document.getElementById(name).value = "";
-		}
-		add_component("resource_path");
-		add_component("resource_type");
-		add_component("schema_name");
-		add_component("table_name");
-		add_component("timetravel_string");
-		const parts = hash_segment.split("&");
-		for (const p in parts) {
-			const inner_parts = parts[p].split("=");
-			document.getElementById(inner_parts[0]).value = decodeURIComponent(inner_parts[1]);
-		}
-	}
-	extract_hash_segment(window.location.hash);
  
          async function form_submitted(event) {
            event.preventDefault();
