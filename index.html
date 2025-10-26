@@ -26,11 +26,16 @@ It's showcases how duckdb-wasm can efficiently query on the fly remote resources
 ---
 	<a href="#resource_path=https%3A%2F%2Fblobs.duckdb.org%2Fdatalake%2Ftpch-sf3.ducklake&resource_type=ducklake&table_name=lineitem"
 	 onclick="window.location.hash='#resource_path=https%3A%2F%2Fblobs.duckdb.org%2Fdatalake%2Ftpch-sf3.ducklake&resource_type=ducklake&table_name=lineitem';extract_hash_segment();var event=document.createEvent('HTMLEvents'); event.initEvent('change', true, true);event.eventName='change';document.getElementById('attach_form').dispatchEvent(event);"
-		>DuckLake, TPCH-sf3, lineitem</a>
+		>DuckLake, tpch-sf3, lineitem</a>
 ---
 	<a href="#resource_path=https%3A%2F%2Fblobs.duckdb.org%2Fdatalake%2Ftpch-sf3.ducklake&resource_type=duckdb"
 	 onclick="window.location.hash='#resource_path=https%3A%2F%2Fblobs.duckdb.org%2Fdatalake%2Ftpch-sf3.ducklake&resource_type=duckdb';extract_hash_segment();var event=document.createEvent('HTMLEvents'); event.initEvent('change', true, true);event.eventName='change';document.getElementById('attach_form').dispatchEvent(event);"
-		>DuckLake (as duckdb), tpch-sf3, [metadata]</a>
+		>DuckDB, tpch-sf3 ducklake, [metadata]</a>
+---
+	<a href="#resource_path=https%3A%2F%2Fblobs.duckdb.org%2Fdata%2Ffinbench.duckdb&resource_type=duckdb&table_name=Account"
+	 onclick="window.location.hash='#resource_path=https%3A%2F%2Fblobs.duckdb.org%2Fdata%2Ffinbench.duckdb&resource_type=duckdb&table_name=Account';extract_hash_segment();var event=document.createEvent('HTMLEvents'); event.initEvent('change', true, true);event.eventName='change';document.getElementById('attach_form').dispatchEvent(event);"
+		>DuckDB, finbench, Accounts</a>
+
       <div style="width:100%; display: flex;">
          <form style="width: 70%;" id="attach_form">
             <h3>Attach options</h3>
