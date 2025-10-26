@@ -35,6 +35,12 @@ It's showcases how duckdb-wasm can efficiently query on the fly remote resources
 	<a href="#resource_path=https%3A%2F%2Fblobs.duckdb.org%2Fdata%2Ffinbench.duckdb&resource_type=duckdb&table_name=Account"
 	 onclick="window.location.hash='#resource_path=https%3A%2F%2Fblobs.duckdb.org%2Fdata%2Ffinbench.duckdb&resource_type=duckdb&table_name=Account';extract_hash_segment();var event=document.createEvent('HTMLEvents'); event.initEvent('change', true, true);event.eventName='change';document.getElementById('attach_form').dispatchEvent(event);"
 		>DuckDB, finbench, Accounts</a>
+---
+	<a href="#resource_path=FROM%20read_avro('http%3A%2F%2Fblobs.duckdb.org%2Fdata%2Fuserdata1.avro')"
+	 onclick="window.location.hash='#resource_path=FROM%20read_avro(\'http%3A%2F%2Fblobs.duckdb.org%2Fdata%2Fuserdata1.avro\')';extract_hash_segment();var event=document.createEvent('HTMLEvents'); event.initEvent('change', true, true);event.eventName='change';document.getElementById('attach_form').dispatchEvent(event);"
+		>Avro, userdata1, via custom SQL</a>
+
+
 
       <div style="width:100%; display: flex;">
          <form style="width: 70%;" id="attach_form">
@@ -243,7 +249,7 @@ It's showcases how duckdb-wasm can efficiently query on the fly remote resources
          
 
          await executeQuery(conn, "DETACH __my_resource__;");
-         var view_query = "CREATE OR REPLACE VIEW __my_view__ AS FROM ";
+         var view_query = "CREATE OR REPLACE VIEW __my_view__ AS ";
          
          setup_queries = "";
          if (resource_type !== "") {
@@ -252,7 +258,7 @@ It's showcases how duckdb-wasm can efficiently query on the fly remote resources
          table.clear();
          return;
          }
-         view_query += "__my_resource__";
+         view_query += "FROM __my_resource__";
          
          
          if (target_table_name !== "") {
@@ -266,8 +272,11 @@ It's showcases how duckdb-wasm can efficiently query on the fly remote resources
          } else {
 		view_query = "CREATE OR REPLACE VIEW __my_view__ AS FROM duckdb_tables() WHERE database_name = '__my_resource__'";
 	}
-         } else {
-         view_query += "'" + resource_path + "'";
+         } else if (resource_path.includes(' ') ) {
+		if (resource_path.slice(-1) == ";") resource_path = resource_path.substr(0, resource_path.length -1);
+		view_query += "(" + resource_path + ")";
+	 } else {
+         view_query += "FROM '" + resource_path + "'";
          }
          
          
