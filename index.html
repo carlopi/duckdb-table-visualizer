@@ -45,6 +45,33 @@ It's showcases how duckdb-wasm can efficiently query on the fly remote resources
 		>DuckLake, space, astronauts</a>
 
 
+      <div style="width:100%; display:flex;">
+         <form style="width: 70%;" id="credentials_form">
+            <h3>  <label for="expend">Credentials</label></h3>
+            <div style="width: -webkit-fill-available;">
+               <div style="width:100%; display: flex;">
+                  <div style="width: 32%; ">
+                     <label for="secret_type">type</label>
+                     <input type="text" id="secret_type" name="schema" value="" style="width: -webkit-fill-available">
+                  </div>
+                  <div style="width: 2%; "></div>
+                  <div style="width: 32%; ">
+                     <label for="table">secret_id</label>
+                     <input type="text" id="secret_id" name="table" value="" style="width: -webkit-fill-available">
+                  </div>
+                  <div style="width: 2%; "></div>
+                  <div style="width: 32%; ">
+                     <label for="table">secret_key</label>
+                     <input type="text" id="secret_key" name="table" value="" style="width: -webkit-fill-available">
+                  </div>
+               </div>
+            </div>
+         </form>
+         <div style="width:28%; position:relative;">
+            <!--        <regular-table></regular-table> -->
+         </div>
+      </div>
+      <br>
       <div style="width:100%; display: flex;">
          <form style="width: 70%;" id="attach_form">
             <h3>Attach options</h3>
@@ -55,34 +82,6 @@ It's showcases how duckdb-wasm can efficiently query on the fly remote resources
                   <div style="width: 32%; ">
                      <label for="schema">type</label>
                      <input type="text" id="resource_type" name="schema" value="ducklake" style="width: -webkit-fill-available">
-                  </div>
-                  <div style="width: 2%; "></div>
-                  <div style="width: 32%; ">
-                     <label for="table">option #1</label>
-                     <input type="text" id="table" name="table" value="" style="width: -webkit-fill-available">
-                  </div>
-                  <div style="width: 2%; "></div>
-                  <div style="width: 32%; ">
-                     <label for="table">option #2</label>
-                     <input type="text" id="table" name="table" value="" style="width: -webkit-fill-available">
-                  </div>
-               </div>
-            </div>
-         </form>
-         <div style="width:28%; position:relative;">
-            <!--        <regular-table></regular-table> -->
-         </div>
-      </div>
-      <br>
-      <input type="checkbox" id="expend" style="display:none"/>
-      <div style="width:100%; display: none;">
-         <form style="width: 70%;" id="credentials_form">
-            <h3>  <label for="expend">Credentials [optional]</label></h3>
-            <div style="width: -webkit-fill-available;">
-               <div style="width:100%; display: flex;">
-                  <div style="width: 32%; ">
-                     <label for="schema">type</label>
-                     <input type="text" id="schema" name="schema" value="" style="width: -webkit-fill-available">
                   </div>
                   <div style="width: 2%; "></div>
                   <div style="width: 32%; ">
@@ -148,6 +147,9 @@ It's showcases how duckdb-wasm can efficiently query on the fly remote resources
 		add_component("schema_name");
 		add_component("table_name");
 		add_component("timetravel_string");
+		add_component("secret_type");
+		add_component("secret_id");
+		add_component("secret_key");
 		const parts = hash_segment.split("&");
 		for (const p in parts) {
 			const inner_parts = parts[p].split("=");
@@ -242,6 +244,9 @@ It's showcases how duckdb-wasm can efficiently query on the fly remote resources
          var target_schema_name = document.getElementById('schema_name').value;
          var timetravel_string = document.getElementById('timetravel_string').value;
         
+         var secret_type = document.getElementById('secret_type').value;
+         var secret_id = document.getElementById('secret_id').value;
+         var secret_key = document.getElementById('secret_key').value;
  
          var last_res = null;
          last_res = await executeQuery(conn, "BEGIN TRANSACTION;");
@@ -252,11 +257,30 @@ It's showcases how duckdb-wasm can efficiently query on the fly remote resources
          
 
          await executeQuery(conn, "DETACH __my_resource__;");
+         if (secret_type !== "") {
+		var secret_query = "CREATE OR REPLACE SECRET __my_secret__ (TYPE "+ secret_type + ", KEY_ID '" + secret_id + "', SECRET '" + secret_key + "');";
+
+         last_res = await executeQuery(conn, secret_query, true);
+         if (!last_res.is_valid) {
+         table.clear();
+         return;
+         }
+		}
+
+
+
+
          var view_query = "CREATE OR REPLACE VIEW __my_view__ AS ";
          
          setup_queries = "";
          if (resource_type !== "") {
-         last_res = await executeQuery(conn, "ATTACH IF NOT EXISTS '" + resource_path + "' AS __my_resource__ (TYPE "+ resource_type + ");", true);
+		var attach_string = "ATTACH IF NOT EXISTS '" + resource_path + "' AS __my_resource__ (TYPE "+ resource_type;
+		if (resource_type == "iceberg" && resource_path.startsWith("arn:aws:s3tables:")) {
+			attach_string += ", ENDPOINT_TYPE 's3_tables'";
+		}
+		attach_string += ");";
+
+         last_res = await executeQuery(conn, attach_string, true);
          if (!last_res.is_valid) {
          table.clear();
          return;
@@ -373,6 +397,9 @@ It's showcases how duckdb-wasm can efficiently query on the fly remote resources
 		add_component("schema_name");
 		add_component("table_name");
 		add_component("timetravel_string");
+		add_component("secret_type");
+		add_component("secret_id");
+		add_component("secret_key");
 		window.location.hash = hash_segment;
 	}
  
