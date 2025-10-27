@@ -297,7 +297,7 @@ It's showcases how duckdb-wasm can efficiently query on the fly remote resources
          view_query += " AT (TIMESTAMP => (" + timetravel_string + ")::TIMESTAMP)";
          }
          } else {
-		view_query = "CREATE OR REPLACE VIEW __my_view__ AS FROM duckdb_tables() WHERE database_name = '__my_resource__'";
+		view_query = "CREATE OR REPLACE VIEW __my_view__ AS FROM (DESCRIBE) WHERE database = '__my_resource__'";
 	}
          } else if (resource_path.includes(' ') ) {
 		if (resource_path.slice(-1) == ";") resource_path = resource_path.substr(0, resource_path.length -1);
